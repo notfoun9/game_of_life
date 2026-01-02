@@ -1,7 +1,6 @@
 #include <raylib.h>
 #include <stdlib.h>
 #include <stdbool.h>
-#include <assert.h>
 
 typedef float TimeStamp;
 
@@ -39,10 +38,30 @@ typedef struct CellType
 
 typedef CellType** Field;
 
+typedef enum DrawGridOptions
+{
+    DrawGrid_False = 0,
+    DrawGrid_UnderLife,
+    DrawGrid_AboveLife,
+    DrawGrid_Max
+} DrawGridOptions;
+
 Field field;
 bool isPaused = true;
-bool drawGrid = false;
+DrawGridOptions drawGrid = DrawGrid_False;
 float agesPerSecond = 5.0f;
+
+void ToggleDrawGrid()
+{
+    drawGrid += 1;
+    drawGrid %= DrawGrid_Max;
+}
+
+
+bool IsAlive(int x, int y)
+{
+    return field[Mod(x, columns)][Mod(y, lines)].isAlive;
+}
 
 bool WillLive(Field field, int x, int y)
 {
@@ -51,7 +70,7 @@ bool WillLive(Field field, int x, int y)
     {
         for (int j = -1; j <= 1; ++j)
         {
-            if (field[Mod(x + i, columns)][Mod(y + j, lines)].isAlive && (i || j))
+            if (IsAlive(x + i, y + j) && (i || j))
             {
                 ++alivesAround;
             }
@@ -82,7 +101,7 @@ Field CreateField()
     return field;
 }
 
-void LiveLife(Field field)
+void LiveLife()
 {
     for (int x = 0; x < columns; ++x)
     {
@@ -112,13 +131,11 @@ void Clear(Field field)
     }
 }
 
-void DrawField()
+void DrawLife()
 {
-    assert(field);
-
     for (int x = 0; x < columns; ++x)
     {
-        for (int y = 0; y < lines; ++y)
+        for (int y = 0; y < columns; ++y)
         {
             if (field[x][y].isAlive)
             {
@@ -176,16 +193,22 @@ void Draw()
     BeginDrawing();
     ClearBackground(BLUE);
 
-    DrawText("Press SPACE to Toggle Pause", 10, screenHeight - 210, 30, LIGHTGRAY);
-    DrawText("Leftclick - Draw", 10, screenHeight - 180, 30, LIGHTGRAY);
-    DrawText("Rightclick - Erase", 10, screenHeight - 150, 30, LIGHTGRAY);
-    DrawText("Press N to Live 1 Age", 10, screenHeight - 120, 30, LIGHTGRAY);
-    DrawText("Press G to Toggle Grid", 10, screenHeight - 90, 30, LIGHTGRAY);
-    DrawText("Press C to Clear screen", 10, screenHeight - 60, 30, LIGHTGRAY);
-    DrawText("Choose speed with 1 - 9", 10, screenHeight - 30, 30, LIGHTGRAY);
+    if (drawGrid == DrawGrid_UnderLife)
+    {
+        DrawFieldGrid();
+    }
 
-    DrawField();
-    if (drawGrid)
+    DrawText("Press SPACE to Toggle Pause", 10, GetScreenHeight() - 210, 30, LIGHTGRAY);
+    DrawText("Leftclick - Draw", 10, GetScreenHeight() - 180, 30, LIGHTGRAY);
+    DrawText("Rightclick - Erase", 10, GetScreenHeight() - 150, 30, LIGHTGRAY);
+    DrawText("Press N to Live 1 Age", 10, GetScreenHeight() - 120, 30, LIGHTGRAY);
+    DrawText("Press G to Toggle Grid", 10, GetScreenHeight() - 90, 30, LIGHTGRAY);
+    DrawText("Press C to Clear screen", 10, GetScreenHeight() - 60, 30, LIGHTGRAY);
+    DrawText("Choose speed with 1 - 9", 10, GetScreenHeight() - 30, 30, LIGHTGRAY);
+
+    DrawLife();
+
+    if (drawGrid == DrawGrid_AboveLife)
     {
         DrawFieldGrid();
     }
@@ -261,7 +284,7 @@ int main(void)
 
         if (isPaused && IsKeyPressed(KEY_N))
         {
-            LiveLife(field);
+            LiveLife();
         }
 
         if (IsKeyPressed(KEY_C))
@@ -271,7 +294,7 @@ int main(void)
 
         if (IsKeyPressed(KEY_G))
         {
-            drawGrid = !drawGrid;
+            ToggleDrawGrid();
         }
 
 
@@ -280,7 +303,7 @@ int main(void)
 
         if (GetTime() - now >= 1.0f / agesPerSecond && !isPaused)
         {
-            LiveLife(field);
+            LiveLife();
             now = GetTime();
         }
     }
