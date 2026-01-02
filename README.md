@@ -7,6 +7,17 @@
 3. Any live cell with more than three live neighbours dies, as if by overpopulation.
 4. Any dead cell with exactly three live neighbours becomes a live cell, as if by reproduction.
 
+## Dependencies
+- [raylib](https://github.com/raysan5/raylib)
+- CMake 3.10 or newer
+
+## How to build and run
+1. `git clone https://github.com/notfoun9/game_of_life.git`
+2. `cd game_of_life`
+3. `mkdir build && cd build`
+4. `cmake .. && make`
+5. Run with `./main`
+
 ## Implemented features
 - Pause/Unpause by pressing Space
 - When paused press N to live one more age
